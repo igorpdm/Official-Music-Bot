@@ -1,0 +1,5 @@
+asyncio
+pytube
+youtube-search-python
+discord.py
+pynacl
