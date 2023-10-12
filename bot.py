@@ -1,3 +1,9 @@
+"""
+
+Developed by Igor Pedrosa
+
+"""
+
 import asyncio
 import random
 import time
