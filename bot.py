@@ -16,7 +16,7 @@ intents.voice_states = True
 intents.presences = True
 
 bot = commands.AutoShardedBot(command_prefix='!', intents=intents)
-TOKEN = "BOT_TOKEN"
+TOKEN = "BOT TOKEN"
 ARQUIVO_DADOS = "info_musicas.pkl"
 
 music_cache = []
@@ -50,7 +50,23 @@ async def on_ready():
         print(e)
 
 
+import pickle
+
 def update_pkl_file():
+    """
+    Updates the music_cache dictionary in a pickle file.
+
+    The function opens a file in binary write mode and dumps the music_cache dictionary
+    into it using the pickle module. If the operation is successful, it prints a success
+    message and returns. If an exception occurs, it prints an error message and the
+    exception details.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     global music_cache
     try:
         with open(ARQUIVO_DADOS, 'wb') as file:
@@ -63,6 +79,16 @@ def update_pkl_file():
 
 
 def already_downloaded(musica):
+    """
+    Checks if a given music file has already been downloaded and is in the music_cache.
+
+    Args:
+        musica (str): The name of the music file to check.
+
+    Returns:
+        If the music file is in the music_cache and has already been downloaded, returns the corresponding Song object.
+        Otherwise, returns None.
+    """
     is_downloaded = False
     is_in_cache = False
     song = None
@@ -97,6 +123,15 @@ def already_downloaded(musica):
 
 
 def update_music_cache(musica):
+    """
+    Updates the music cache with the given music.
+
+    Parameters:
+    musica (str): The name of the music to be added to the cache.
+
+    Returns:
+    None
+    """
     for musicas in music_cache:
         if musicas == musica:
             return
@@ -108,6 +143,16 @@ def update_music_cache(musica):
 
 @bot.command(name="play")
 async def play(ctx, *, musica):
+    """
+    This function plays a song in a voice channel.
+
+    Parameters:
+    ctx (discord.ext.commands.Context): The context of the command.
+    musica (str): The name of the song or the URL of the video/playlist to be played.
+
+    Returns:
+    None
+    """
     try:
         if not ctx.author.voice:
             embed = discord.Embed(title="Erro",
@@ -139,6 +184,9 @@ async def play(ctx, *, musica):
 
 # Toca a próxima música quando a anterior acaba
 async def play_next(ctx):
+    """
+    Plays the next song in the queue, if there is one. If the queue is empty, disconnects the voice client.
+    """
     global voice_client, queue, current_song
     if len(queue) > 0:
         next_song = queue[0].audio_file
@@ -153,12 +201,32 @@ async def play_next(ctx):
 
 
 async def play_by_video(ctx, url_musica):
+    """
+    Plays a music from a given YouTube video URL.
+
+    Args:
+        ctx (discord.ext.commands.Context): The context of the command.
+        url_musica (str): The URL of the YouTube video.
+
+    Returns:
+        None
+    """
     global voice_client, queue, music_cache
     video_id = pytube.extract.video_id(url_musica) + ".mp3"
     await play_music(ctx, video_id, url_musica)
 
 
 async def play_by_playlist(ctx, link_playlist):
+    """
+    Downloads and plays a playlist of music videos from YouTube.
+
+    Args:
+        ctx (discord.ext.commands.Context): The context of the command.
+        link_playlist (str): The URL of the YouTube playlist to be played.
+
+    Returns:
+        None
+    """
     global downloading_playlist
     downloading_playlist = True
     playlist = Playlist(link_playlist)
@@ -203,6 +271,13 @@ async def play_by_playlist(ctx, link_playlist):
 
 
 async def play_by_name(ctx, nome_musica):
+    """
+    Searches for a music video on YouTube based on the given name and plays it in the voice channel.
+    
+    Args:
+    - ctx: The context of the command.
+    - nome_musica: The name of the music to be searched on YouTube.
+    """
     global voice_client, music_cache, queue
     try:
         results = VideosSearch(nome_musica, limit=1, region="BR").result()['result']
@@ -220,6 +295,17 @@ async def play_by_name(ctx, nome_musica):
 
 
 async def play_music(ctx, video_id, video_url):
+    """
+    Plays music in a voice channel.
+
+    Args:
+        ctx (discord.ext.commands.Context): The context of the command.
+        video_id (str): The ID of the video to play.
+        video_url (str): The URL of the video to play.
+
+    Returns:
+        None
+    """
     global voice_client, music_cache, queue, current_song
     channel = ctx.message.author.voice.channel
     if voice_client is None:
@@ -275,6 +361,15 @@ async def play_music(ctx, video_id, video_url):
 
 @bot.command(name="stop")
 async def stop(ctx):
+    """
+    Stops the music playback and clears the queue.
+
+    Parameters:
+    ctx (discord.ext.commands.Context): The context of the command.
+
+    Returns:
+    None
+    """
     global voice_client, queue
     try:
         if voice_client:
@@ -298,6 +393,15 @@ async def stop(ctx):
 
 @bot.command("skip")
 async def skip(ctx):
+    """
+    Skips the current song being played and plays the next song in the queue, if there is one.
+
+    Parameters:
+    - ctx (discord.ext.commands.Context): The context of the command.
+
+    Returns:
+    - None
+    """
     global voice_client, queue
     try:
         if voice_client:
@@ -351,6 +455,14 @@ async def shuffle(ctx):
 
 @bot.command(name="pause")
 async def pause(ctx):
+    """
+    Pauses the currently playing music.
+
+    If there is no music playing, sends a message indicating that the bot is not playing any music.
+
+    Returns:
+        None
+    """
     global voice_client
     try:
         if voice_client:
@@ -371,6 +483,15 @@ async def pause(ctx):
 
 @bot.command(name="resume")
 async def resume(ctx):
+    """
+    Resumes the playback of the current song if it was previously paused.
+
+    If the bot is not currently playing any music, an error message will be displayed.
+
+    If the bot is currently playing music but it is not paused, a message will be displayed indicating that the music is not paused.
+
+    If the bot is currently playing music and it is paused, the music will be resumed and a message will be displayed indicating that the music has been resumed.
+    """
     global voice_client
     try:
         if voice_client:
@@ -396,6 +517,18 @@ async def resume(ctx):
 
 
 async def download(musica):
+    """
+    Downloads a YouTube video as an mp3 file and returns a music object.
+
+    Args:
+        musica (str): The URL of the YouTube video to download.
+
+    Returns:
+        music: A music object representing the downloaded mp3 file.
+
+    Raises:
+        Exception: If an error occurs while downloading the video.
+    """
     try:
         video = pytube.YouTube(musica)
         audio_stream = video.streams.filter(only_audio=True).first()
@@ -410,6 +543,17 @@ async def download(musica):
 
 
 async def search_music(ctx, nome_musica):
+    """
+    Searches for a music video on YouTube based on the given name.
+
+    Args:
+        ctx (discord.ext.commands.Context): The context of the command.
+        nome_musica (str): The name of the music to search for.
+
+    Returns:
+        list: A list of dictionaries containing information about the search results.
+              Each dictionary represents a single video.
+    """
     try:
         results = VideosSearch(nome_musica, limit=1, region="BR").result()['result']
         return results
@@ -516,6 +660,15 @@ async def search_music(ctx, nome_musica):
 
 @bot.command(name="nowplaying")
 async def nowplaying(ctx):
+    """
+    Sends a message to the Discord channel with the current song that the bot is playing.
+
+    Parameters:
+    ctx (discord.ext.commands.Context): The context of the command.
+
+    Returns:
+    None
+    """
     global current_song
     try:
         if current_song:
@@ -532,11 +685,30 @@ async def nowplaying(ctx):
 
 
 async def cria_lista(ctx, queue):
+    """
+    Creates a paginated list of songs in the queue.
+
+    Args:
+        ctx (discord.ext.commands.Context): The context of the command.
+        queue (list): The list of songs in the queue.
+
+    Returns:
+        None
+    """
     num_comandos_por_pagina = 10
     num_paginas = -(-len(queue) // num_comandos_por_pagina)  # ceil division
     pagina_atual = 1
 
     def cria_embed():
+        """
+        Creates an embed with the current page of songs in the queue.
+
+        Args:
+            None
+
+        Returns:
+            discord.Embed: The embed with the current page of songs in the queue.
+        """
         primeira_musica = 1
         embed = discord.Embed(title="Fila")
         embed.set_footer(text=f"Página {pagina_atual} de {num_paginas}")
@@ -599,6 +771,12 @@ async def cria_lista(ctx, queue):
 
 @bot.command(name="queue")
 async def fila(ctx):
+    """
+    Sends a message to the Discord channel with the current queue of songs to be played.
+
+    If the queue is empty, sends a message indicating that the queue is empty.
+    If the queue is not empty, calls the function 'cria_lista' to create a list of songs and sends it to the channel.
+    """
     global queue, voice_client
     try:
         if not queue:
@@ -615,6 +793,16 @@ async def fila(ctx):
 
 @bot.command(name="remove")
 async def remove(ctx, index):
+    """
+    Removes a song from the queue at the specified index.
+
+    Parameters:
+    - ctx (discord.ext.commands.Context): The context of the command.
+    - index (int): The index of the song to be removed from the queue.
+
+    Returns:
+    - None
+    """
     global queue,voice_client
     try:
         if not queue:
