@@ -34,6 +34,10 @@ downloading_playlist = False
 
 @bot.event
 async def on_ready():
+    """
+    This function is called when the bot is ready to start receiving events.
+    It initializes the music_cache global variable and loads its content from a file if it exists.
+    """
     global music_cache
     print(f"Logged in as {bot.user.name} successfully")
     try:
